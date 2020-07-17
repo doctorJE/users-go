@@ -1,0 +1,6 @@
+/vendor
+
+# 編譯後產生的檔案
+users-go
+lastupdate.tmp
+routers/commentsRouter_controllers.go
