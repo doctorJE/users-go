@@ -4,3 +4,6 @@
 users-go
 lastupdate.tmp
 routers/commentsRouter_controllers.go
+
+# 環境設定檔
+app.conf
