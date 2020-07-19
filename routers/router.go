@@ -17,6 +17,7 @@ func init() {
 		beego.NSNamespace("/user",
 			beego.NSRouter("/create", &controllers.UserController{}, "post:Create"),
 			beego.NSRouter("/delete", &controllers.UserController{}, "post:Delete"),
+			beego.NSRouter("/pwd/change", &controllers.UserController{}, "post:ChangePassword"),
 		),
 	)
 	beego.AddNamespace(ns)
