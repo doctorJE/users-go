@@ -78,3 +78,26 @@ func GetByAccount(userObject databaseResources.UserObject) errrorhandleableretur
 	userObject.Load(&queryUser)
 	return errrorhandleablereturns.NewReturnUser(userObject, nil)
 }
+
+// UpdatePassword: 變更密碼
+func UpdatePassword(userObject databaseResources.UserObject, hashedPassword string) errrorhandleablereturns.ErrorHandleableReturnBool {
+	queryUser := databaseResources.User{
+		ID:       userObject.GetID(),
+		Password: hashedPassword,
+	}
+
+	affectedRows, queryError := orm.NewOrm().Update(&queryUser, "Password")
+	if queryError != nil {
+		if queryError == orm.ErrNoRows ||
+			queryError == orm.ErrMissPK {
+			internalError := error.NewInternalError(error.ResourceNotFound)
+			return errrorhandleablereturns.NewReturnBool(false, &internalError)
+		}
+		internalError := error.NewInternalError(error.DatabaseError)
+		internalError.SetMessage(queryError.Error())
+		return errrorhandleablereturns.NewReturnBool(false, &internalError)
+	}
+
+	isUpdated := affectedRows > 0
+	return errrorhandleablereturns.NewReturnBool(isUpdated, nil)
+}
