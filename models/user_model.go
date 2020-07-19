@@ -24,3 +24,20 @@ func InsertUser(userObject *databaseResources.UserObject, hashedPassword string)
 	userObject.SetID(userId)
 	return errrorhandleablereturns.NewReturnBool(true, nil)
 }
+
+// DeleteByAccount: 透過 account 刪除使用者
+func DeleteByAccount(account string) errrorhandleablereturns.ErrorHandleableReturnBool {
+	effectedNum, queryError := orm.NewOrm().QueryTable("user").Filter("account", account).Delete()
+	if queryError != nil {
+		if queryError == orm.ErrNoRows {
+			internalError := error.NewInternalError(error.ResourceNotFound)
+			return errrorhandleablereturns.NewReturnBool(false, &internalError)
+		}
+		internalError := error.NewInternalError(error.DatabaseError)
+		internalError.SetMessage(queryError.Error())
+		return errrorhandleablereturns.NewReturnBool(false, &internalError)
+	}
+
+	isDeleted := effectedNum > 0
+	return errrorhandleablereturns.NewReturnBool(isDeleted, nil)
+}
