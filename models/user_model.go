@@ -41,3 +41,19 @@ func DeleteByAccount(account string) errrorhandleablereturns.ErrorHandleableRetu
 	isDeleted := effectedNum > 0
 	return errrorhandleablereturns.NewReturnBool(isDeleted, nil)
 }
+
+// IsAccountExisted: 帳號是否存在
+func IsAccountExisted(account string) errrorhandleablereturns.ErrorHandleableReturnBool {
+	countUser, queryError := orm.NewOrm().QueryTable("user").Filter("account", account).Count()
+	if queryError != nil {
+		if queryError == orm.ErrNoRows {
+			return errrorhandleablereturns.NewReturnBool(false, nil)
+		}
+		internalError := error.NewInternalError(error.DatabaseError)
+		internalError.SetMessage(queryError.Error())
+		return errrorhandleablereturns.NewReturnBool(false, &internalError)
+	}
+
+	isExisted := countUser > 0
+	return errrorhandleablereturns.NewReturnBool(isExisted, nil)
+}
