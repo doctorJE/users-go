@@ -57,3 +57,24 @@ func IsAccountExisted(account string) errrorhandleablereturns.ErrorHandleableRet
 	isExisted := countUser > 0
 	return errrorhandleablereturns.NewReturnBool(isExisted, nil)
 }
+
+// GetByAccount: 透過 account 取得使用者
+func GetByAccount(userObject databaseResources.UserObject) errrorhandleablereturns.ErrorHandleableReturnUser {
+	queryUser := databaseResources.User{
+		Account: userObject.GetAccount(),
+	}
+
+	queryError := orm.NewOrm().Read(&queryUser, "Account")
+	if queryError != nil {
+		if queryError == orm.ErrNoRows {
+			internalError := error.NewInternalError(error.ResourceNotFound)
+			return errrorhandleablereturns.NewReturnUser(userObject, &internalError)
+		}
+		internalError := error.NewInternalError(error.DatabaseError)
+		internalError.SetMessage(queryError.Error())
+		return errrorhandleablereturns.NewReturnUser(userObject, &internalError)
+	}
+
+	userObject.Load(&queryUser)
+	return errrorhandleablereturns.NewReturnUser(userObject, nil)
+}
