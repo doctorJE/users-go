@@ -89,3 +89,42 @@ func (this *UserController) Create() {
 	this.response(&isOk, nil, http.StatusOK)
 	return
 }
+
+// Delete: 刪除
+func (this *UserController) Delete() {
+	var user databaseResources.User
+	data := this.Ctx.Input.RequestBody
+	err := json.Unmarshal(data, &user)
+	if err != nil {
+		isOk := false
+		apiError := error.NewAPIError(error.APIInvalidInput)
+		this.response(&isOk, &apiError, http.StatusBadRequest)
+		return
+	}
+
+	if len(user.Account) == 0 ||
+		len(user.Account) > 50 {
+		isOk := false
+		apiError := error.NewAPIError(error.APIInvalidInput)
+		this.response(&isOk, &apiError, http.StatusBadRequest)
+		return
+	}
+
+	deleteUserReturns := models.DeleteByAccount(user.Account)
+	if deleteUserReturns.HasError() {
+		isOk := false
+		internalError := deleteUserReturns.GetError()
+		if internalError.GetCode() == error.ResourceNotFound {
+			apiError := error.NewAPIError(error.APIUserNotFound)
+			this.response(&isOk, &apiError, http.StatusNotFound)
+			return
+		}
+		apiError := error.NewAPIError(error.APIInternalServerError)
+		this.response(&isOk, &apiError, http.StatusInternalServerError)
+		return
+	}
+
+	isOk := true
+	this.response(&isOk, nil, http.StatusOK)
+	return
+}
