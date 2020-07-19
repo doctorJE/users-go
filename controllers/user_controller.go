@@ -199,3 +199,45 @@ func (this *UserController) ChangePassword() {
 	this.response(&isOk, nil, http.StatusOK)
 	return
 }
+
+// Login: 驗證帳號密碼
+func (this *UserController) Login() {
+	var user databaseResources.User
+	user.Account = this.GetString("Account")
+	user.Password = this.GetString("Password")
+
+	if len(user.Account) == 0 ||
+		len(user.Account) > 50 ||
+		len(user.Password) == 0 ||
+		len(user.Password) > 50 {
+		apiError := error.NewAPIError(error.APIInvalidInput)
+		this.response(nil, &apiError, http.StatusBadRequest)
+		return
+	}
+
+	userObject := databaseResources.NewUserObject()
+	userObject.Load(&user)
+
+	getUserReturns := models.GetByAccount(userObject)
+	if getUserReturns.HasError() {
+		internalError := getUserReturns.GetError()
+		if internalError.GetCode() == error.ResourceNotFound {
+			apiError := error.NewAPIError(error.APIIncorrectUsernameOrPassword)
+			this.response(nil, &apiError, http.StatusBadRequest)
+			return
+		}
+		apiError := error.NewAPIError(error.APIInternalServerError)
+		this.response(nil, &apiError, http.StatusInternalServerError)
+		return
+	}
+	existedUserObject := getUserReturns.GetUser()
+
+	if !existedUserObject.IsPasswordCorrect(user.Password) {
+		apiError := error.NewAPIError(error.APIIncorrectUsernameOrPassword)
+		this.response(nil, &apiError, http.StatusBadRequest)
+		return
+	}
+
+	this.response(nil, nil, http.StatusOK)
+	return
+}
